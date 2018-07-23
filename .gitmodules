@@ -1,0 +1,3 @@
+[submodule "third-party/oxd-web-lua"]
+	path = third-party/oxd-web-lua
+	url = git@github.com:altexy/oxd-web-lua.git
