@@ -10,6 +10,7 @@ local index
 -- model is an array where every element has structure below:
 -- expect: expected oxd-https-extentions endpoint
 -- data: body to response, will be conversted into JSON
+-- callback: function to modify hardcoded response before send it to wire
 return function(model)
     index = index and index + 1 or 1
     local item = model[index]
@@ -20,7 +21,12 @@ return function(model)
     end
 
     ngx.header.content_type = 'application/json; charset=UTF-8'
-    local json = cjson.encode(item.response)
+    local response = item.response
+    local callback = item.callback
+    if callback then
+        response = callback(response)
+    end
+    local json = cjson.encode(response)
     ngx.say(json)
 end
 
