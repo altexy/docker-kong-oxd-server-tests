@@ -45,27 +45,27 @@ test("kong test", function()
 
     -- create a Sevice
     local res, err = sh_ex(
-        [[curl -i -sS -X POST --url http://localhost:8001/services/ --data 'name=test1-service' --data 'url=http://backend']]
+        [[curl --fail -i -sS -X POST --url http://localhost:8001/services/ --data 'name=test1-service' --data 'url=http://backend']]
     )
 
     -- create a Route
     local res, err = sh_ex(
-        [[curl -i -sS -X POST  --url http://localhost:8001/services/test1-service/routes --data 'hosts[]=backend.com']]
+        [[curl --fail -i -sS -X POST  --url http://localhost:8001/services/test1-service/routes --data 'hosts[]=backend.com']]
     )
 
     -- test it works
-    local res, err = sh_ex([[curl -i -sS -X GET --url http://localhost:8000/ --header 'Host: backend.com']])
+    local res, err = sh_ex([[curl --fail -i -sS -X GET --url http://localhost:8000/ --header 'Host: backend.com']])
 
     -- enable plugin for the Service
     local res, err = sh_ex([[
-curl -i -sS -X POST  --url http://localhost:8001/services/test1-service/plugins/  --data 'name=test1' \
+curl --fail -i -sS -X POST  --url http://localhost:8001/services/test1-service/plugins/  --data 'name=test1' \
 --data "config.hide_credentials=true" \
 --data "config.op_server=stub" \
 --data "config.oxd_http_url=http://oxd-mock"]]
     )
 
     -- test it works
-    local res, err = sh_ex([[curl -i -sS  -X GET --url http://localhost:8000/ --header 'Host: backend.com']])
+    local res, err = sh_ex([[curl --fail -i -sS  -X GET --url http://localhost:8000/ --header 'Host: backend.com']])
 
     print_logs = false
 end)
