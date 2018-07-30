@@ -32,6 +32,8 @@ function _M.client_setup(conf)
     end
 
     conf.oxd_id = setupClientResponse.data.oxd_id
+    conf.client_id = setupClientResponse.data.client_id
+    conf.client_secret = setupClientResponse.data.client_secret
     return true
 end
 

@@ -30,9 +30,10 @@ local function get_body_data()
     return data
 end
 
-
--- TODO add check that Authorization header is present with valid token
-
+local endpoint_without_token = {
+    ["/setup-client"] = true,
+    ["/get-client-token"] = true,
+}
 
 local index = 0
 -- model is an array where every element has structure below:
@@ -52,9 +53,16 @@ return function(model)
         return ngx.exit(400)
     end
 
+    local path = ngx.var.uri
+    local token
+    if not endpoint_without_token[path] then
+        local authorization = ngx.var.http_authorization
+        token = ngx.re.match(authorization, "\\s*[Bb]earer\\s+(.+)", "jo")
+    end
+
     local content_type = ngx.var.http_content_type
     if not content_type:find("application/json", 1, true) then
-        ngx.log(ngx.ERR, "expect application/json cContent-Type,  got: ", content_type)
+        ngx.log(ngx.ERR, "expect application/json Content-Type,  got: ", content_type)
         return ngx.exit(400)
     end
 
@@ -62,6 +70,11 @@ return function(model)
     local params = cjson.decode(body)
 
     local item = model[index]
+
+    if path ~= item.expect then
+        ngx.log(ngx.ERR, "expect endpoint: ", item.expect, " got: ", path)
+        return ngx.exit(400)
+    end
 
     local required_fields = item.required_fields
     if required_fields then
@@ -73,10 +86,8 @@ return function(model)
         end
     end
 
-    local path = ngx.var.uri
-    if path ~= item.expect then
-        ngx.log(ngx.ERR, "expect endpoint: ", item.expect, " got: ", path)
-        return ngx.exit(400)
+    if item.request_check then
+        item.request_check(params, token)
     end
 
     ngx.header.content_type = "application/json; charset=UTF-8"

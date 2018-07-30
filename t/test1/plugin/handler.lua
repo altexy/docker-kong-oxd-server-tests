@@ -17,7 +17,7 @@ function handler:access(config)
     -- (will log that your plugin is entering this context)
     handler.super.access(self)
 
-    return access()
+    return access(config)
 end
 
 return handler

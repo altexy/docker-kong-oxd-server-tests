@@ -32,14 +32,16 @@ services:
           KONG_ADMIN_ERROR_LOG:  /dev/stderr
           KONG_PLUGINS: test1
         ports:
-            - "8000:8000"
-            - "8001:8001"
+            - "8000"
+            - "8001"
         volumes:
             - ${HOST_GIT_ROOT}/t/test1/plugin:/usr/local/openresty/lualib/kong/plugins/test1:ro
             - ${HOST_GIT_ROOT}/third-party/oxd-web-lua/oxdweb.lua:/usr/local/openresty/lualib/oxdweb.lua:ro
 
     oxd-mock:
         image: openresty/openresty:alpine
+        ports:
+            - "80"
         volumes:
             - ${HOST_GIT_ROOT}/t/test1/oxd-mock.nginx:/usr/local/openresty/nginx/conf/nginx.conf:ro
             - ${HOST_GIT_ROOT}/t/oxd-mock.lua:/usr/local/openresty/lualib/gluu/oxd-mock.lua:ro
