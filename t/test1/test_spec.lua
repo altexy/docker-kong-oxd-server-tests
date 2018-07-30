@@ -63,10 +63,11 @@ test("kong test", function()
         [[curl --fail -i -sS -X POST  --url http://localhost:]],kong_admin_port,[[/services/test1-service/routes --data 'hosts[]=backend.com']]
     )
 
+    sleep(1)
+
     -- test it works
     local res, err = sh_ex([[curl --fail -i -sS -X GET --url http://localhost:]], kong_proxy_port,[[/ --header 'Host: backend.com']])
 
-    sleep(1)
 
     -- enable plugin for the Service
     local res, err = sh_ex([[
