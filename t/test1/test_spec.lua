@@ -35,7 +35,7 @@ test("kong test", function()
     docker_compose("up -d kong backend")
 
     -- TODO replace with more stable solution
-    sleep(5) -- lets kong chance to start
+    sleep(10) -- lets kong chance to start
 
     local print_logs = true
     finally(function()
@@ -56,6 +56,8 @@ test("kong test", function()
         [[curl --fail -i -sS -X POST --url http://localhost:]],kong_admin_port,[[/services/ --data 'name=test1-service' --data 'url=http://backend']]
     )
 
+    sleep(1)
+
     -- create a Route
     local res, err = sh_ex(
         [[curl --fail -i -sS -X POST  --url http://localhost:]],kong_admin_port,[[/services/test1-service/routes --data 'hosts[]=backend.com']]
@@ -64,6 +66,8 @@ test("kong test", function()
     -- test it works
     local res, err = sh_ex([[curl --fail -i -sS -X GET --url http://localhost:]], kong_proxy_port,[[/ --header 'Host: backend.com']])
 
+    sleep(1)
+
     -- enable plugin for the Service
     local res, err = sh_ex([[
 curl --fail -i -sS -X POST  --url http://localhost:]],kong_admin_port,[[/services/test1-service/plugins/  --data 'name=test1' \
@@ -71,6 +75,8 @@ curl --fail -i -sS -X POST  --url http://localhost:]],kong_admin_port,[[/service
 --data "config.op_server=stub" \
 --data "config.oxd_http_url=http://oxd-mock"]]
     )
+
+    sleep(1)
 
     -- test it fail with 401
     local res, err = sh_ex([[curl -i -sS -X GET --url http://localhost:]], kong_proxy_port,[[/ --header 'Host: backend.com']])
@@ -114,5 +120,5 @@ curl --fail -i -sS -X POST  --url http://localhost:]],kong_admin_port,[[/service
         access_token, [[']]
     )
 
-    print_logs = false
+    -- print_logs = false
 end)
