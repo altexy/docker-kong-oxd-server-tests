@@ -25,8 +25,10 @@ test("kong test", function()
     sleep(5) -- lets postgress chance to start
     --docker_compose("logs kong-database")
 
-    -- start it as foreground to get a chance to finish
-    docker_compose("up kong-migration > /dev/null")
+    docker_compose("up -d kong-migration")
+
+    -- TODO replace with more stable solution
+    sleep(10) -- lets kong chance to start
 
     docker_compose("up -d oxd-mock")
 
