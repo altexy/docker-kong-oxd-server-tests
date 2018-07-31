@@ -56,10 +56,34 @@ _M.sh_ex = function(...)
     return stdout, stderr
 end
 
-
-_M.sleep = function(n, quiet)
+local sleep = function(n, quiet)
     if not quiet then print("Waiting " .. n .. " seconds ...") end
     os.execute("sleep " .. tonumber(n))
+end
+
+_M.sleep = sleep
+
+_M.sh_until_ok = function(tries, ...)
+    assert(tries and type(tries) == "number" and tries > 0)
+    local command = table.concat({...})
+    print(command)
+    local ok, status, stdout, stderr
+    for i = 1, tries  do
+        ok, status, stdout, stderr = utils.executeex(command, true)
+        if ok then
+            break
+        end
+        sleep(1)
+    end
+    print(stderr)
+    assert(ok, "sh_ex [" .. command .. "] fail")
+    assert(status == 0, "stdout [" .. command .. "] exit with code: " .. status)
+    stdout = stdout:gsub('^%s+', '')
+    stdout = stdout:gsub('%s+$', '')
+    print(stdout)
+    stderr = stderr:gsub('^%s+', '')
+    stderr = stderr:gsub('%s+$', '')
+    return stdout, stderr
 end
 
 _M.dump_table_to_tmp_file = function(t)

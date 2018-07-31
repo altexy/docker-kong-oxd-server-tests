@@ -2,6 +2,8 @@ version: '3.3'
 services:
     kong-database:
         image: postgres:9.5
+        ports:
+          - "5432"
         environment:
             POSTGRES_USER: kong
             POSTGRES_DB: kong
@@ -49,5 +51,7 @@ services:
 
     backend:
         image: openresty/openresty:alpine
+        ports:
+            - "80"
         volumes:
             - ${HOST_GIT_ROOT}/t/test1/backend.nginx:/usr/local/openresty/nginx/conf/nginx.conf:ro
