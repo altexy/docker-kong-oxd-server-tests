@@ -94,7 +94,13 @@ return function(model)
 
     if item.request_check then
         print(body)
-        item.request_check(params, token)
+        local ok , status = pcall(item.request_check, params, token)
+        if type(status) ~= "number" then
+            status = "400"
+        end
+        if not ok then
+            return ngx.exit(status)
+        end
     end
 
     ngx.header.content_type = "application/json; charset=UTF-8"
