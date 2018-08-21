@@ -34,6 +34,9 @@ test("Simple oxd Kong plugin test", function()
     kong_utils.kong_postgress_custom_plugins{
         plugins = {
             demo = test_root .. "/plugin",
+        },
+        modules = {
+            ["oxdweb.lua"] = host_git_root .. "/third-party/oxd-web-lua/oxdweb.lua"
         }
     }
     kong_utils.backend()
@@ -102,7 +105,7 @@ test("Simple oxd Kong plugin test", function()
         [[ --data "config.oxd_id=]], setup_client_response.data.oxd_id, "\" "
     )
 
-    print"test it fail with 401"
+    print"test it fail with 401 without token"
     local res, err = sh_ex([[curl -i -sS -X GET --url http://localhost:]],
         ctx.kong_proxy_port, [[/ --header 'Host: backend.com']])
     assert(res:find("401"))

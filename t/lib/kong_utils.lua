@@ -32,7 +32,7 @@ local function build_plugins_list(plugins)
     return result
 end
 
-local function build_plugins_volumes(plugins, host_git_root)
+local function build_plugins_volumes(plugins)
     assert(type(plugins) == "table")
     local items = {}
     for k,v in pairs(plugins) do
@@ -45,6 +45,20 @@ local function build_plugins_volumes(plugins, host_git_root)
     return result
 end
 
+local function build_modules_volumes(modules)
+    assert(type(modules) == "table")
+    local items = {}
+    for k,v in pairs(modules) do
+        items[#items + 1] =
+        " -v " .. v .. ":" .. "/usr/local/openresty/lualib/" .. k .. " "
+    end
+
+    local result = table.concat(items)
+    print("modules volumes: ", result)
+    return result
+end
+
+
 _M.kong_postgress_custom_plugins = function(opts)
     local ctx = _G.ctx
     assert(ctx.network_name)
@@ -53,7 +67,7 @@ _M.kong_postgress_custom_plugins = function(opts)
         " -e POSTGRES_USER=kong ",
         " -e POSTGRES_DB=kong ",
         " --name kong-database ", -- TODO avoid hardcoded names
-        postgress_image
+        opts.postgress_image or postgress_image
     )
 
     ctx.finalizeres[#ctx.finalizeres + 1] = function()
@@ -74,7 +88,7 @@ _M.kong_postgress_custom_plugins = function(opts)
         " -e KONG_ADMIN_ACCESS_LOG=/dev/stdout ",
         " -e KONG_PROXY_ERROR_LOG=/dev/stderr ",
         " -e KONG_ADMIN_ERROR_LOG=/dev/stderr ",
-        kong_image,
+        opts.kong_image or kong_image,
         " kong migrations up"
     )
 
@@ -82,7 +96,8 @@ _M.kong_postgress_custom_plugins = function(opts)
     sleep(2)
 
     local docker_run_plugin
-    local plugins = opts.plugins
+    local plugins = opts.plugins or {}
+    local modules = opts.modules or {}
 
     ctx.kong_id = stdout("docker run -p 8000 -p 8001 --rm -d ",
         " --network=", ctx.network_name,
@@ -96,9 +111,9 @@ _M.kong_postgress_custom_plugins = function(opts)
         " -e KONG_PROXY_ERROR_LOG=/dev/stderr ",
         " -e KONG_ADMIN_ERROR_LOG=/dev/stderr ",
         " -e KONG_PLUGINS=", build_plugins_list(plugins), " ",
-        build_plugins_volumes(plugins, ctx.host_git_root),
-        " -v ", ctx.host_git_root, "/third-party/oxd-web-lua/oxdweb.lua:/usr/local/openresty/lualib/oxdweb.lua:ro ",
-        kong_image
+        build_plugins_volumes(plugins),
+        build_modules_volumes(modules),
+        opts.kong_image or kong_image
     )
 
     ctx.finalizeres[#ctx.finalizeres + 1] = function()
@@ -117,13 +132,13 @@ _M.kong_postgress_custom_plugins = function(opts)
 
 end
 
-_M.backend = function()
+_M.backend = function(image)
     local ctx = _G.ctx
     ctx.backend_id = stdout("docker run -p 80 -d ",
         " --network=", ctx.network_name,
         " -v ", ctx.host_git_root, "/t/lib/backend.nginx:/usr/local/openresty/nginx/conf/nginx.conf:ro ",
         " --name backend ", -- TODO avoid hardcoded name
-        openresty_image
+        image or openresty_image
     )
 
     ctx.finalizeres[#ctx.finalizeres + 1] = function()
@@ -137,7 +152,7 @@ _M.backend = function()
     local res, err = sh_ex("/opt/wait-for-it/wait-for-it.sh ", "127.0.0.1:", ctx.backend_port)
 end
 
-_M.oxd_mock = function(model)
+_M.oxd_mock = function(model, image)
     local ctx = _G.ctx
     ctx.oxd_id = stdout("docker run -p 80 -d ",
         " --network=", ctx.network_name,
@@ -145,7 +160,7 @@ _M.oxd_mock = function(model)
         " -v ", ctx.host_git_root, "/t/lib/oxd-mock.nginx:/usr/local/openresty/nginx/conf/nginx.conf:ro ",
         " -v ", model, ":/usr/local/openresty/lualib/gluu/oxd-model.lua:ro ",
         " --name oxd-mock ", -- TODO avoid hardcoded name
-        openresty_image
+        image or openresty_image
     )
 
     ctx.finalizeres[#ctx.finalizeres + 1] = function()
