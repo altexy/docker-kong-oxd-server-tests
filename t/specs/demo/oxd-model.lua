@@ -27,12 +27,11 @@ local introspect_item =  {
         }
     },
     response_callback = function(response)
-        response.data.exp = ngx.now() + 60*60
+        response.data.exp = 60*60
         response.data.iat = ngx.now()
         return response
     end,
 }
-
 
 model = {
     -- array part start, scenario
@@ -111,7 +110,7 @@ model = {
     },
     -- plugin check the client token
     introspect_item,
-    
+
     -- plugin check the wrong client token
     introspect_item,
 }

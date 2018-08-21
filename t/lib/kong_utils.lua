@@ -119,7 +119,7 @@ _M.kong_postgress_custom_plugins = function(opts)
     ctx.finalizeres[#ctx.finalizeres + 1] = function()
         --sh("docker logs  ", ctx.kong_id)
         sh("docker stop  ", ctx.kong_id)
-        sh("docker rm -v  ", ctx.kong_id)
+        --sh("docker rm -v  ", ctx.kong_id)
     end
 
     ctx.kong_admin_port =

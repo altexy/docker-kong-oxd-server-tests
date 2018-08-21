@@ -36,7 +36,9 @@ test("Simple oxd Kong plugin test", function()
             demo = test_root .. "/plugin",
         },
         modules = {
-            ["oxdweb.lua"] = host_git_root .. "/third-party/oxd-web-lua/oxdweb.lua"
+            ["oxdweb.lua"] = host_git_root .. "/third-party/oxd-web-lua/oxdweb.lua",
+            ["resty/lrucache.lua"] = host_git_root .. "/third-party/lua-resty-lrucache/lib/resty/lrucache.lua",
+            ["resty/lrucache/pureffi.lua"] = host_git_root .. "/third-party/lua-resty-lrucache/lib/resty/lrucache/pureffi.lua",
         }
     }
     kong_utils.backend()
@@ -120,11 +122,18 @@ test("Simple oxd Kong plugin test", function()
     print"test it fail with 401 with wrong Bearer token"
     local res, err = sh_ex(
         [[curl -i -sS  -X GET --url http://localhost:]], ctx.kong_proxy_port,
-        [[/ --header 'Host: backend.com' --header 'Authorization: Bearer ]],
-        "bla-bla", [[']]
+        [[/ --header 'Host: backend.com' --header 'Authorization: Bearer bla-bla']]
     )
     assert(res:find("401"))
 
-    local print_logs = false
+    print"test it works with the same token again, oxd-model id completed"
+    local res, err = sh_ex(
+        [[curl --fail -i -sS  -X GET --url http://localhost:]], ctx.kong_proxy_port,
+        [[/ --header 'Host: backend.com' --header 'Authorization: Bearer ]],
+        access_token, [[']]
+    )
+
+
+    --print_logs = false
 end)
 
