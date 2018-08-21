@@ -124,7 +124,7 @@ test("Simple oxd Kong plugin test", function()
         [[curl -i -sS  -X GET --url http://localhost:]], ctx.kong_proxy_port,
         [[/ --header 'Host: backend.com' --header 'Authorization: Bearer bla-bla']]
     )
-    assert(res:find("401"))
+    assert(res:find("403"))
 
     print"test it works with the same token again, oxd-model id completed"
     local res, err = sh_ex(

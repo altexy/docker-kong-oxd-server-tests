@@ -84,7 +84,8 @@ return function(conf)
         if not status or #status == 0 or status == "error"  or not data then
             kong.log.err(PLUGINNAME .. ": Failed to register client")
             -- TODO shall we cache negative response?
-            return kong.response.exit(401)
+            -- TODO should we distinguish between unexected error and not valid credentials?
+            return kong.response.exit(403)
         end
 
         if data.exp and data.iat then
