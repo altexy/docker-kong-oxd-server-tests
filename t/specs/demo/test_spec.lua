@@ -117,6 +117,14 @@ test("Simple oxd Kong plugin test", function()
         access_token, [[']]
     )
 
+    print"test it fail with 401 with wrong Bearer token"
+    local res, err = sh_ex(
+        [[curl -i -sS  -X GET --url http://localhost:]], ctx.kong_proxy_port,
+        [[/ --header 'Host: backend.com' --header 'Authorization: Bearer ]],
+        "bla-bla", [[']]
+    )
+    assert(res:find("401"))
+
     local print_logs = false
 end)
 

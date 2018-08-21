@@ -1,5 +1,39 @@
 local model
 
+local introspect_item =  {
+    expect = "/introspect-access-token",
+    required_fields = {
+        "oxd_id",
+        "access_token",
+    },
+    request_check = function(json, token)
+        assert(json.oxd_id == model[1].response.data.oxd_id)
+        assert(json.access_token == model[2].response.data.access_token)
+        assert(token == model[3].response.data.access_token, 401)
+    end,
+    response = {
+        status = "ok",
+        data = {
+            active = true,
+            client_id = "l238j323ds-23ij4",
+            username = "John Black",
+            scopes = "read write",
+            token_type = "bearer",
+            sub = "jblack",
+            aud = "l238j323ds-23ij4",
+            iss = "https://as.gluu.org/",
+            --acr_values": ["basic","duo"],
+            --extension_field": "twenty-seven", }
+        }
+    },
+    response_callback = function(response)
+        response.data.exp = ngx.now() + 60*60
+        response.data.iat = ngx.now()
+        return response
+    end,
+}
+
+
 model = {
     -- array part start, scenario
 
@@ -76,38 +110,10 @@ model = {
         }
     },
     -- plugin check the client token
-    {
-        expect = "/introspect-access-token",
-        required_fields = {
-            "oxd_id",
-            "access_token",
-        },
-        request_check = function(json, token)
-            assert(json.oxd_id == model[1].response.data.oxd_id)
-            assert(json.access_token == model[2].response.data.access_token)
-            assert(token == model[3].response.data.access_token)
-        end,
-        response = {
-            status = "ok",
-            data = {
-                active = true,
-                client_id = "l238j323ds-23ij4",
-                username = "John Black",
-                scopes = "read write",
-                token_type = "bearer",
-                sub = "jblack",
-                aud = "l238j323ds-23ij4",
-                iss = "https://as.gluu.org/",
-                --acr_values": ["basic","duo"],
-                --extension_field": "twenty-seven", }
-            }
-        },
-        response_callback = function(response)
-            response.data.exp = ngx.now() + 60*60
-            response.data.iat = ngx.now()
-            return response
-        end,
-    }
+    introspect_item,
+    
+    -- plugin check the wrong client token
+    introspect_item,
 }
 
 return model

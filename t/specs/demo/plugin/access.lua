@@ -1,5 +1,9 @@
 local oxd = require "oxdweb"
 
+-- TODO expiration
+local access_token
+
+local PLUGINNAME = "demo plugin"
 
 return function(conf)
     kong.log("demo plugin access phase")
@@ -18,22 +22,25 @@ return function(conf)
         return kong.response.exit(401)
     end
 
-    local response = oxd.get_client_token(
-        conf.oxd_http_url,
-        {
-            client_id = conf.client_id,
-            client_secret = conf.client_secret,
-            scope = "openid profile email",
-            op_host = conf.op_server,
-        }
-    )
+    if not access_token then
+        local response = oxd.get_client_token(
+            conf.oxd_http_url,
+            {
+                client_id = conf.client_id,
+                client_secret = conf.client_secret,
+                scope = "openid profile email",
+                op_host = conf.op_server,
+            }
+        )
 
-    local status = response.status
-    local access_token = response.data.access_token
+        local status = response.status
 
-    if not status or #status == 0 or status == "error" then
-        kong.log.err(PLUGINNAME .. ": Failed to get access token")
-        return kong.response.exit(500)
+        if not status or #status == 0 or status == "error" or not response.data then
+            kong.log.err(PLUGINNAME .. ": Failed to get access token")
+            return kong.response.exit(500)
+        end
+
+        access_token = response.data.access_token
     end
 
     local response = oxd.introspect_access_token(
@@ -46,14 +53,11 @@ return function(conf)
     )
 
     local status = response.status
-    local access_token = response.data.access_token
 
-    if not status or #status == 0 or status == "error" then
+    if not status or #status == 0 or status == "error"  or not response.data then
         kong.log.err(PLUGINNAME .. ": Failed to register client")
-        return kong.response.exit(500)
+        return kong.response.exit(401)
     end
-
-
 
     -- just allow everything
 end
