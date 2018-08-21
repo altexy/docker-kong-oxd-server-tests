@@ -1,6 +1,5 @@
 local BasePlugin = require "kong.plugins.base_plugin"
-local access = require "kong.plugins.test1.access"
-local helper = require "kong.plugins.test1.helper"
+local access = require "kong.plugins.demo.access"
 
 local handler = BasePlugin:extend()
 -- handler.priority = 999
@@ -9,7 +8,7 @@ local handler = BasePlugin:extend()
 -- Base Plugin handler, it's only role is to instanciate itself
 -- with a name. The name is your plugin name as it will be printed in the logs.
 function handler:new()
-    handler.super.new(self, helper.PLUGINNAME)
+    handler.super.new(self, "demo")
 end
 
 function handler:access(config)
