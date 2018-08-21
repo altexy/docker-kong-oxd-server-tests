@@ -23,6 +23,15 @@ The simplest way to install docker-ce is as below (old distros may be not suppor
 
 `curl http://get.docker.com/ | sudo sh`
 
+General layout
+==============
+
+`specs` folder should contains fully automated tests only.
+
+`flows` folder should contains test suites which require external server for testing, for example oxd and gluu servers.
+It may require some provisioning from a test runner.
+TODO - at the moment a programmer must hardcode servers' address/port within test.
+
 
 How to test
 ===========
@@ -32,17 +41,18 @@ cd docker-kong-oxd-server-tests
 ./t/run.sh
 ``` 
 
-At the moment very basic test case `test1` is implemented.
+At the moment very basic test case `demo` is implemented.
 
 It uses docker-compose to describe all services.
 
 Trivial plugin which only register itself on mock oxd server is implemented.
 
-The test case start all required services, register a Service, then Route, configure test1 plugin.
+The test case start all required services, register a Service, then Route, configure demo plugin.
+
 
 Mock oxd-server
 ===============
 
 It uses mock oxd server.
-The `t/test1/oxd-model.lua` defines the sequence of expected endpoints calls and responses.
+The `t/demo/oxd-model.lua` defines the sequence of expected endpoints calls and responses.
 

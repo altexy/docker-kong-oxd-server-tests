@@ -1,14 +1,16 @@
-local helper = require "kong.plugins.test1.helper"
 local oxd = require "oxdweb"
 
 
 return function(conf)
-    kong.log(helper.PLUGINNAME, " plugin access phase")
+    kong.log("demo plugin access phase")
 
     local authorization = ngx.var.http_authorization
     local token
     if authorization and #authorization > 0 then
-        token = ngx.re.match(authorization, "\\s*[Bb]earer\\s+(.+)", "jo")
+        local from, to, err = ngx.re.find(authorization, "\\s*[Bb]earer\\s+(.+)", "jo", nil, 1)
+        if from then
+            token = authorization:sub(from, to)
+        end
     end
 
     if not token then

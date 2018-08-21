@@ -57,7 +57,13 @@ return function(model)
     local token
     if not endpoint_without_token[path] then
         local authorization = ngx.var.http_authorization
-        token = ngx.re.match(authorization, "\\s*[Bb]earer\\s+(.+)", "jo")
+        if authorization and #authorization > 0 then
+            local from, to, err = ngx.re.find(authorization, "\\s*[Bb]earer\\s+(.+)", "jo", nil, 1)
+            if from then
+                token = authorization:sub(from, to)
+                print(token)
+            end
+        end
     end
 
     local content_type = ngx.var.http_content_type
@@ -87,6 +93,7 @@ return function(model)
     end
 
     if item.request_check then
+        print(body)
         item.request_check(params, token)
     end
 
