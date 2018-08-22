@@ -48,16 +48,17 @@ return function(conf)
         )
 
         local status = response.status
-        local data = response.data
+        local body = response.body
 
-        if not status or #status == 0 or status == "error" or not data then
+        if status >= 300 or not body.data or not body.data.access_token then
             access_token = nil
             access_token_expire = 0
-            kong.log.err(PLUGINNAME .. ": Failed to get access token")
+            kong.log.err("Failed to get access token")
             return kong.response.exit(500)
         end
 
-        access_token = data.access_token
+        local data = body.data
+        access_token =data.access_token
         if data.expires_in then
             access_token_expire = ngx.now() + data.expires_in
         else
@@ -66,10 +67,10 @@ return function(conf)
         end
     end
 
-    local response, stale_data = token_cache:get(token)
-    if not response or stale_data then
+    local data, stale_data = token_cache:get(token)
+    if not data or stale_data then
 
-        response = oxd.introspect_access_token(
+        local response = oxd.introspect_access_token(
             conf.oxd_http_url,
             {
                 oxd_id = conf.oxd_id,
@@ -79,22 +80,25 @@ return function(conf)
         )
 
         local status = response.status
-        data = response.data
 
-        if not status or #status == 0 or status == "error"  or not data then
-            kong.log.err(PLUGINNAME .. ": Failed to register client")
-            -- TODO shall we cache negative response?
+        if status >= 300 or not response.body.data then
+            kong.log.err("TODO")
+            -- TODO shall we cache negative response? - not in first version, need to create a issue.
             -- TODO should we distinguish between unexected error and not valid credentials?
             return kong.response.exit(403)
         end
 
+        data = response.body.data
+
         if data.exp and data.iat then
-            token_cache:set(token, response, data.iat + data.exp - EXPIRE_DELTA)
+            token_cache:set(token, data, data.iat + data.exp - EXPIRE_DELTA)
         else
             kong.log.err(PLUGINNAME .. ": missed exp or iat fields")
             -- TODO what we must do?
         end
     end
 
-    -- TODO implement scope expressions
+    -- TODO implement consumer detection
+
+    -- TODO implement scope expressions, id any
 end
